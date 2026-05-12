@@ -4,7 +4,6 @@ import { MemorySaver } from "@langchain/langgraph";
 import { tools } from "./tools";
 import { SESSION_PLANER, GENERAL_QA } from "./prompts";
 
-
 interface AgentConfig {
   model?: string;
   systemPrompt?: string;
