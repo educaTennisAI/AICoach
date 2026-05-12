@@ -1,1 +1,1 @@
-export { AICoach } from './agent';
+export { AICoach } from './agent.js';

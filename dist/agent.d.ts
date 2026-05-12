@@ -1,7 +1,7 @@
 interface AgentConfig {
     model?: string;
     systemPrompt?: string;
-    tools?: never[];
+    tools?: any[];
     middleware?: never[];
     skills?: string[];
     memory?: boolean;

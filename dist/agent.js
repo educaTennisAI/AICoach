@@ -1,8 +1,8 @@
 import { createAgent } from "langchain";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
-import { tools } from "./tools";
-import { SESSION_PLANER, GENERAL_QA } from "./prompts";
+import { tools } from "./tools.js";
+import { SESSION_PLANER, GENERAL_QA } from "./prompts.js";
 class AICoach {
     constructor(config = { model: "gpt-5.4-nano", checkpointer: new MemorySaver }) {
         this.sessions = new Map();
@@ -35,7 +35,7 @@ class AICoach {
             const session = this.getSession(sessionId) || this.createSession(sessionId);
             const prompt = SESSION_PLANER
                 .replace("{language}", session.language)
-                .replace("{level}", session.level);
+                .replace("{level}", String(session.level));
             const result = await this.agent.invoke({
                 messages: [
                     new SystemMessage(prompt)

@@ -67,7 +67,7 @@ export const searchExercises = tool(
       const docs = await vectorStore.similaritySearch(
         topics.join(" "),
         minExercisesPerPart,
-        filter as Object
+        filter as any
       );
 
       const exercises = (docs as any[]).map((doc: any) => ({
