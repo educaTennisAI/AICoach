@@ -20,14 +20,10 @@ interface Session {
 }
 declare class AICoach {
     private config;
-    private sessions;
     private agent;
     constructor(config?: AgentConfig);
-    createSession(sessionId: string): Session;
-    getSession(sessionId: string): Session | undefined;
-    deleteSession(sessionId: string): boolean;
-    createTrainingSession(sessionId: string): Promise<any>;
-    chat(sessionId: string, question: string): Promise<any>;
+    createTrainingSession(sessionId: string, userProfile: any, day: string): Promise<any>;
+    chat(sessionId: string, question: string, userProfile: any): Promise<any>;
     chatStream(input: {
         sessionId?: string;
         messages: {

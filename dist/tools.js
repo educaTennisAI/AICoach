@@ -12,6 +12,25 @@ const vectorStore = new Chroma(embeddings, {
         "hnsw:space": "cosine",
     },
 });
+export const getUserProfile = tool(async ({}, config) => {
+    try {
+        const { ctx } = config.configurable;
+        return {
+            success: true,
+            message: "Found User Context",
+            ctx
+        };
+    }
+    catch (err) {
+        return {
+            success: false,
+            message: `Error querying user context: ${err}`,
+        };
+    }
+}, {
+    name: "getUserProfile",
+    description: "Gets user profile context describing user level, available days, etc. As well as other preferences",
+});
 export const getLevelGuidelines = tool(async (input) => {
     try {
         const docs = await vectorStore.similaritySearch("", 1, {
@@ -91,4 +110,4 @@ export const searchExercises = tool(async (input) => {
         filter: z.object({}).describe("Chroma db query filter").optional()
     }),
 });
-export const tools = [searchExercises, getLevelGuidelines];
+export const tools = [searchExercises, getLevelGuidelines, getUserProfile];

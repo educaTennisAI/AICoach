@@ -25,7 +25,6 @@ interface Session {
 
 class AICoach {
   private config: AgentConfig;
-  private sessions: Map<string, Session> = new Map();
   private agent: ReturnType<typeof createAgent>;
 
   constructor(config: AgentConfig = { model: "gpt-5.4-nano", checkpointer: new MemorySaver }) {
@@ -38,32 +37,12 @@ class AICoach {
     this.agent = createAgent(config as never);
   }
 
-  createSession(sessionId: string): Session {
-    const session: Session = {
-      id: sessionId,
-      language: 'en',
-      level: 1,
-      history: [],
-      createdAt: new Date(),
-    };
-    this.sessions.set(sessionId, session);
-    return session;
-  }
-
-  getSession(sessionId: string): Session | undefined {
-    return this.sessions.get(sessionId);
-  }
-
-  deleteSession(sessionId: string): boolean {
-    return this.sessions.delete(sessionId);
-  }
-
-  async createTrainingSession (sessionId: string) {
+  async createTrainingSession (sessionId: string, userProfile: any, day: string) {
     try { 
-      const session = this.getSession(sessionId) || this.createSession(sessionId);
       const prompt = SESSION_PLANER
-        .replace("{language}", session.language)
-        .replace("{level}", String(session.level))
+        .replace("{day}", day) 
+        .replace("{language}", userProfile.language || 'en')
+        .replace("{level}", String(userProfile.level) || 'beginner')
 
       const result = await this.agent.invoke(
         { 
@@ -73,17 +52,11 @@ class AICoach {
         },
         { 
           configurable: { 
-            thread_id: sessionId 
+            thread_id: sessionId,
+            ctx: userProfile
           } 
         }
       );
-
-      // Get AI Last Message
-      const messages = result.messages;
-      const lastMessage = messages[messages.length - 1];
-
-      // Update History Training Sessions
-      session.history.push(lastMessage.content);
 
       return result;
     } catch(err) {
@@ -91,7 +64,7 @@ class AICoach {
     }
   }
 
-  async chat(sessionId: string, question: string) {
+  async chat(sessionId: string, question: string, userProfile: any) {
     try {
       const result = await this.agent.invoke(
       { 
@@ -102,7 +75,8 @@ class AICoach {
       },
       { 
         configurable: { 
-          thread_id: sessionId 
+          thread_id: sessionId,
+          ctx: userProfile
         } 
       }
       );

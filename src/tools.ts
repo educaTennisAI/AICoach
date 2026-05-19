@@ -15,6 +15,27 @@ const vectorStore = new Chroma(embeddings, {
   },
 });
 
+export const getUserProfile = tool(
+  async ({}, config) => {
+    try { 
+      const { ctx } = config.configurable as any;
+      return {
+        success: true,
+        message: "Found User Context",
+        ctx 
+      };
+    } catch(err) {
+        return {
+          success: false,
+          message: `Error querying user context: ${err}`,
+        };
+    }
+  }, 
+  {
+    name: "getUserProfile",
+    description: "Gets user profile context describing user level, available days, etc. As well as other preferences",
+  }
+);
 export const getLevelGuidelines = tool(
   async (input: { level: number}) => {
     try { 
@@ -113,4 +134,4 @@ export const searchExercises = tool(
   }
 );
 
-export const tools = [searchExercises, getLevelGuidelines]
+export const tools = [searchExercises, getLevelGuidelines, getUserProfile]

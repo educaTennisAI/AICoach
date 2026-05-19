@@ -1,4 +1,13 @@
 import { z } from "zod";
+export declare const getUserProfile: import("langchain").DynamicTool<{
+    success: boolean;
+    message: string;
+    ctx: any;
+} | {
+    success: boolean;
+    message: string;
+    ctx?: undefined;
+}, unknown>;
 export declare const getLevelGuidelines: import("langchain").DynamicStructuredTool<z.ZodObject<{
     level: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
@@ -52,7 +61,15 @@ export declare const searchExercises: import("langchain").DynamicStructuredTool<
         description: any;
     }[];
 }, unknown, "searchExercises">;
-export declare const tools: (import("langchain").DynamicStructuredTool<z.ZodObject<{
+export declare const tools: (import("langchain").DynamicTool<{
+    success: boolean;
+    message: string;
+    ctx: any;
+} | {
+    success: boolean;
+    message: string;
+    ctx?: undefined;
+}, unknown> | import("langchain").DynamicStructuredTool<z.ZodObject<{
     level: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
     level: number;

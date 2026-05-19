@@ -6,6 +6,7 @@ describe('AITools', () => {
       const { AICoach } = await import('../src/agent');
       const { getLevelGuidelines } = await import('../src/tools');
       const result = await getLevelGuidelines.invoke({ level: 1 });
+      console.log(result);
       expect(result.guidelines).toBeDefined();
     }, 30000);
   });
