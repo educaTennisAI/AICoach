@@ -7,6 +7,7 @@ interface AgentConfig {
     memory?: boolean;
     backend?: string;
     checkpointer?: any;
+    supabase?: any;
 }
 interface Session {
     id: string;
@@ -21,7 +22,8 @@ interface Session {
 declare class AICoach {
     private config;
     private agent;
-    constructor(config?: AgentConfig);
+    private supabase;
+    constructor(config?: AgentConfig, supabaseClient?: any);
     createTrainingSession(sessionId: string, userProfile: any, day: string): Promise<any>;
     chat(sessionId: string, question: string, userProfile: any): Promise<any>;
     chatStream(input: {

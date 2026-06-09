@@ -1,7 +1,7 @@
 import { createAgent } from "langchain";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
-import { tools } from "./tools.js";
+import { Tools } from "./tools.js";
 import { SESSION_PLANER, GENERAL_QA } from "./prompts.js";
 
 interface AgentConfig {
@@ -12,7 +12,8 @@ interface AgentConfig {
   skills?: string[];
   memory?: boolean;
   backend?: string;
-  checkpointer?: any
+  checkpointer?: any;
+  supabase?: any;
 }
 
 interface Session {
@@ -26,23 +27,26 @@ interface Session {
 class AICoach {
   private config: AgentConfig;
   private agent: ReturnType<typeof createAgent>;
+  private supabase: any;
 
-  constructor(config: AgentConfig = { model: "gpt-5.4-nano", checkpointer: new MemorySaver }) {
+  constructor(config: AgentConfig = { model: "gpt-5.4-nano", checkpointer: new MemorySaver }, supabaseClient?: any) {
     // Default config
     config.model ??= "gpt-5.4-nano"; 
     config.checkpointer ??= new MemorySaver(); 
-    config.tools ??= tools;
+    config.tools ??= new Tools(supabaseClient).getTools();
 
     this.config = config;
+    this.supabase = supabaseClient;
     this.agent = createAgent(config as never);
   }
 
-  async createTrainingSession (sessionId: string, userProfile: any, day: string) {
+  async createTrainingSession(sessionId: string, userProfile: any, day: string) {
     try { 
       const prompt = SESSION_PLANER
         .replace("{day}", day) 
         .replace("{language}", userProfile.language || 'en')
         .replace("{level}", String(userProfile.level) || 'beginner')
+        .replace("{block}", String(userProfile.currentBlock) || '1')
 
       const result = await this.agent.invoke(
         { 
@@ -53,7 +57,7 @@ class AICoach {
         { 
           configurable: { 
             thread_id: sessionId,
-            ctx: userProfile
+            ctx: userProfile,
           } 
         }
       );
@@ -76,7 +80,7 @@ class AICoach {
       { 
         configurable: { 
           thread_id: sessionId,
-          ctx: userProfile
+          ctx: userProfile,
         } 
       }
       );

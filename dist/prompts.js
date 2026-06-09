@@ -48,6 +48,10 @@ Use this information context to do your main task, but do not mention these deta
 ## USER
 - Exercise already used in current week: {videoLinks}
 
+## ACTIVE BLOCK
+- Current Block: {block}
+- You MUST focus exercises that align with this block's methodology. All 4 exercises in the Main Part must strictly serve the objective of the Active_Block.
+
 ## PROGRAM GUIDELINES
 - Level: {description}
 {guidelines}
