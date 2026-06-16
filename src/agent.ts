@@ -2,7 +2,7 @@ import { createAgent } from "langchain";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
 import { Tools } from "./tools.js";
-import { SESSION_PLANER, GENERAL_QA } from "./prompts.js";
+import { SESSION_PLANER, GENERAL_QA, PROGRESS_RECOMMENDATION, BLOCK_ADVANCEMENT } from "./prompts.js";
 
 interface AgentConfig {
   model?: string;
@@ -87,6 +87,91 @@ class AICoach {
       return result;
     } catch(err) {
       console.error(err);
+    }
+  }
+
+  async getRecommendation(params: {
+    sessionId: string;
+    level: number;
+    levelName: string;
+    block: number;
+    maxBlocks: number;
+    blockName: string;
+    blockObjective: string;
+    totalSessions: number;
+    streak: number;
+    sessionHistory: string;
+    language: string;
+  }): Promise<string> {
+    try {
+      const prompt = PROGRESS_RECOMMENDATION
+        .replace("{level}", String(params.level))
+        .replace("{levelName}", params.levelName)
+        .replace("{block}", String(params.block))
+        .replace("{maxBlocks}", String(params.maxBlocks))
+        .replace("{blockName}", params.blockName)
+        .replace("{blockObjective}", params.blockObjective)
+        .replace("{totalSessions}", String(params.totalSessions))
+        .replace("{streak}", String(params.streak))
+        .replace("{sessionHistory}", params.sessionHistory)
+        .replace("{language}", params.language || 'en');
+
+      const result = await this.agent.invoke(
+        { messages: [new SystemMessage(prompt)] },
+        { configurable: { thread_id: params.sessionId, ctx: {} } }
+      );
+
+      const messages = result.messages;
+      let content = messages[messages.length - 1].content as string;
+
+      content = content.replace(/^```(?:markdown)?\n?/i, '').replace(/\n?```$/i, '').trim();
+
+      return content;
+    } catch (err) {
+      console.error('Error getting recommendation:', err);
+      return 'Unable to generate recommendation right now.';
+    }
+  }
+
+  async evaluateBlockAdvancement(params: {
+    sessionId: string;
+    level: number;
+    levelName: string;
+    block: number;
+    maxBlocks: number;
+    blockName: string;
+    blockObjective: string;
+    sessionHistory: string;
+    language: string;
+  }): Promise<{ advance: boolean; reason: string }> {
+    try {
+      const prompt = BLOCK_ADVANCEMENT
+        .replace("{level}", String(params.level))
+        .replace("{levelName}", params.levelName)
+        .replace("{block}", String(params.block))
+        .replace("{maxBlocks}", String(params.maxBlocks))
+        .replace("{blockName}", params.blockName)
+        .replace("{blockObjective}", params.blockObjective)
+        .replace("{sessionHistory}", params.sessionHistory)
+        .replace("{language}", params.language || 'en');
+
+      const result = await this.agent.invoke(
+        { messages: [new SystemMessage(prompt)] },
+        { configurable: { thread_id: params.sessionId, ctx: {} } }
+      );
+
+      const messages = result.messages;
+      const content = messages[messages.length - 1].content as string;
+
+      try {
+        return JSON.parse(content);
+      } catch {
+        const advanceMatch = content.includes('"advance": true');
+        return { advance: advanceMatch, reason: content };
+      }
+    } catch (err) {
+      console.error('Error evaluating block advancement:', err);
+      return { advance: false, reason: 'Error during evaluation' };
     }
   }
 
