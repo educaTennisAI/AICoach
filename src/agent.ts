@@ -2,7 +2,7 @@ import { createAgent } from "langchain";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
 import { Tools } from "./tools.js";
-import { SESSION_PLANER, GENERAL_QA, PROGRESS_RECOMMENDATION, BLOCK_ADVANCEMENT } from "./prompts.js";
+import { SESSION_PLANER, GENERAL_QA, PROGRESS_RECOMMENDATION, BLOCK_ADVANCEMENT, EXTRACT_OBSERVATIONS } from "./prompts.js";
 
 interface AgentConfig {
   model?: string;
@@ -177,6 +177,50 @@ class AICoach {
 
   async chatStream(input: { sessionId?: string; messages: { role: string; content: string }[] }) {
     return this.agent.stream(input);
+  }
+
+  async extractObservations(params: {
+    sessionId: string;
+    difficulty: string;
+    energyLevel: string;
+    notes: string;
+    struggles: string[];
+    exercises: string;
+    language: string;
+  }): Promise<{ skill: string; impact: number; confidence: number; reason: string }[]> {
+    try {
+      const prompt = EXTRACT_OBSERVATIONS
+        .replace("{difficulty}", params.difficulty)
+        .replace("{energyLevel}", params.energyLevel)
+        .replace("{notes}", params.notes || 'None')
+        .replace("{struggles}", params.struggles?.join(', ') || 'None')
+        .replace("{exercises}", params.exercises || 'None')
+        .replace("{language}", params.language || 'en');
+
+      const result = await this.agent.invoke(
+        { messages: [new SystemMessage(prompt)] },
+        { configurable: { thread_id: params.sessionId, ctx: {} } }
+      );
+
+      const messages = result.messages;
+      const content = messages[messages.length - 1].content as string;
+
+      try {
+        const cleaned = content.replace(/:\s*\+(\d)/g, ': $1');
+        const parsed = JSON.parse(cleaned);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        const jsonMatch = content.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          const cleaned = jsonMatch[0].replace(/:\s*\+(\d)/g, ': $1');
+          return JSON.parse(cleaned);
+        }
+        return [];
+      }
+    } catch (err) {
+      console.error('Error extracting observations:', err);
+      return [];
+    }
   }
 }
 
