@@ -2,7 +2,7 @@ import { createAgent } from "langchain";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
 import { Tools } from "./tools.js";
-import { SESSION_PLANER, GENERAL_QA, PROGRESS_RECOMMENDATION, BLOCK_ADVANCEMENT, EXTRACT_OBSERVATIONS } from "./prompts.js";
+import { WEEKLY_PLANER, SESSION_PLANER, GENERAL_QA, PROGRESS_RECOMMENDATION, BLOCK_ADVANCEMENT, EXTRACT_OBSERVATIONS } from "./prompts.js";
 
 interface AgentConfig {
   model?: string;
@@ -40,9 +40,41 @@ class AICoach {
     this.agent = createAgent(config as never);
   }
 
-  async createTrainingSession(sessionId: string, userProfile: any, day: string) {
+  async createWeeklyPlan(sessionId: string, userProfile: any, week: string, _prompt: string) {
+    try { 
+      const trainingDays = userProfile.available_days.join(", ");
+      const prompt = WEEKLY_PLANER
+        .replace("{_prompt}", _prompt)
+        .replace("{week}", week) 
+        .replace("{training_days}", trainingDays)
+        .replace("{language}", userProfile.language || 'en')
+        .replace("{level}", String(userProfile.level) || 'beginner')
+        .replace("{block}", String(userProfile.currentBlock) || '1')
+
+      const result = await this.agent.invoke(
+        { 
+          messages: [
+          new SystemMessage(prompt)
+          ]
+        },
+        { 
+          configurable: { 
+            thread_id: sessionId,
+            ctx: userProfile,
+          } 
+        }
+      );
+
+      return result;
+    } catch(err) {
+      console.error(err)
+    }
+  }
+
+  async createTrainingSession(sessionId: string, userProfile: any, day: string, _prompt: string) {
     try { 
       const prompt = SESSION_PLANER
+        .replace("{_prompt}", _prompt)
         .replace("{day}", day) 
         .replace("{language}", userProfile.language || 'en')
         .replace("{level}", String(userProfile.level) || 'beginner')
