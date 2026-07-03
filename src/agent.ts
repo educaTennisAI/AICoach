@@ -113,10 +113,15 @@ class AICoach {
 
   async chat(sessionId: string, question: string, userProfile: any) {
     try {
+      const levelInfo = userProfile?.level
+        ? `\n\nPlayer Level: ${userProfile.level}`
+        : '';
+      const systemPrompt = `${GENERAL_QA}${levelInfo}`;
+
       const result = await this.agent.invoke(
       { 
         messages: [
-          new SystemMessage(GENERAL_QA),
+          new SystemMessage(systemPrompt),
           new HumanMessage(question)
         ]
       },
