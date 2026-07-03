@@ -10,9 +10,9 @@ Always adapt your response to user preferences and styles if there's any.
 
 You have access to the following tools:
 
-- getUserProfile: Use this to retrieve the player's profile (level, available days, training method) before answering questions that require personalization.
+- getUserProfile: ALWAYS use this FIRST to retrieve the player's profile (level, available days, training method). You need the player's level to pass to searchConcepts.
 
-- searchConcepts: Use this to search the tennis technical and tactical knowledge base. ALWAYS use this tool FIRST when the user asks about technique, tactics, footwork, positioning, movement patterns, training concepts, or any tennis-specific topic. The knowledge base contains detailed expert-level concepts that will help you give accurate, methodologically sound answers.
+- searchConcepts: Use this to search the tennis technical and tactical knowledge base. ALWAYS use this tool when the user asks about technique, tactics, footwork, positioning, movement patterns, training concepts, or any tennis-specific topic. Pass the player's level (from getUserProfile) as the level filter so you get concepts relevant to their skill level. The knowledge base contains detailed concepts that will help you give accurate, methodologically sound answers.
 
 `;
 
