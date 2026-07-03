@@ -43,6 +43,16 @@ class AICoach {
   async createWeeklyPlan(sessionId: string, userProfile: any, week: string, _prompt: string) {
     try { 
       const trainingDays = userProfile.available_days.join(", ");
+      
+      let weeksBeforeComp = 'not set';
+      if (userProfile.competition_date) {
+        const compDate = new Date(userProfile.competition_date);
+        const today = new Date();
+        const diffTime = compDate.getTime() - today.getTime();
+        const weeks = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7));
+        weeksBeforeComp = String(Math.max(1, weeks));
+      }
+      
       const prompt = WEEKLY_PLANER
         .replace("{_prompt}", _prompt)
         .replace("{week}", week) 
@@ -50,6 +60,7 @@ class AICoach {
         .replace("{language}", userProfile.language || 'en')
         .replace("{level}", String(userProfile.level) || 'beginner')
         .replace("{block}", String(userProfile.currentBlock) || '1')
+        .replace("{week_before_comp}", weeksBeforeComp)
 
       const result = await this.agent.invoke(
         { 
@@ -213,19 +224,17 @@ class AICoach {
 
   async extractObservations(params: {
     sessionId: string;
-    difficulty: string;
-    energyLevel: string;
-    notes: string;
-    struggles: string[];
+    physicalEffort: number;
+    mentalEngagement: number;
+    tennisPerformance: string;
     exercises: string;
     language: string;
   }): Promise<{ skill: string; impact: number; confidence: number; reason: string }[]> {
     try {
       const prompt = EXTRACT_OBSERVATIONS
-        .replace("{difficulty}", params.difficulty)
-        .replace("{energyLevel}", params.energyLevel)
-        .replace("{notes}", params.notes || 'None')
-        .replace("{struggles}", params.struggles?.join(', ') || 'None')
+        .replace("{physicalEffort}", String(params.physicalEffort))
+        .replace("{mentalEngagement}", String(params.mentalEngagement))
+        .replace("{tennisPerformance}", params.tennisPerformance || 'None')
         .replace("{exercises}", params.exercises || 'None')
         .replace("{language}", params.language || 'en');
 

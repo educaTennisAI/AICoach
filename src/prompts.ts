@@ -273,10 +273,9 @@ You are an expert Tennis Coach analyzing session feedback to extract structured 
 - consistency: training adherence, reliable execution, session completion quality
 
 # SESSION FEEDBACK
-- Difficulty: {difficulty}
-- Energy Level: {energyLevel}
-- Notes: {notes}
-- Struggles: {struggles}
+- Physical Effort: {physicalEffort}/5
+- Mental Engagement: {mentalEngagement}/5
+- Tennis Performance: {tennisPerformance}
 - Exercises Completed: {exercises}
 
 # YOUR TASK
@@ -288,9 +287,9 @@ Analyze the feedback and extract 1-4 observations. Each observation MUST be a JS
 
 Rules:
 - NEVER assign scores directly. Only describe what you impact MUST be a plain integer without a + sign (use 1, 2, 3 not +1, +2, +3)
-- Map difficulty/energy to relevant skills (e.g., high difficulty + low energy = fitness observation)
-- Map struggles to negative impacts on the relevant skill
-- Map positive notes/energy to positive impacts
+- Map Physical Effort to fitness skill (high effort = positive impact, low effort = negative impact)
+- Map Mental Engagement to mental skill (high engagement = positive impact on focus/composure, low engagement = negative impact)
+- Map Tennis Performance text to relevant skills based on what the user mentions (technique issues → technique, movement comments → movement, etc.)
 - If no meaningful observations can be made, return an empty array
 
 Respond with ONLY a JSON array, no markdown, no code blocks:

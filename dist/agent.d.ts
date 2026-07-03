@@ -24,7 +24,8 @@ declare class AICoach {
     private agent;
     private supabase;
     constructor(config?: AgentConfig, supabaseClient?: any);
-    createTrainingSession(sessionId: string, userProfile: any, day: string): Promise<any>;
+    createWeeklyPlan(sessionId: string, userProfile: any, week: string, _prompt: string): Promise<any>;
+    createTrainingSession(sessionId: string, userProfile: any, day: string, _prompt: string): Promise<any>;
     chat(sessionId: string, question: string, userProfile: any): Promise<any>;
     getRecommendation(params: {
         sessionId: string;
@@ -62,10 +63,9 @@ declare class AICoach {
     }): Promise<import("@langchain/core/utils/stream").IterableReadableStream<Record<string, any>>>;
     extractObservations(params: {
         sessionId: string;
-        difficulty: string;
-        energyLevel: string;
-        notes: string;
-        struggles: string[];
+        physicalEffort: number;
+        mentalEngagement: number;
+        tennisPerformance: string;
         exercises: string;
         language: string;
     }): Promise<{
