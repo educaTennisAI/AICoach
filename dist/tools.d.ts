@@ -95,6 +95,31 @@ export declare class Tools {
         newBlock: number;
         reason: string;
     }, unknown, "updateUserBlock">;
+    searchConcepts(): import("langchain").DynamicStructuredTool<z.ZodObject<{
+        query: z.ZodString;
+        level: z.ZodOptional<z.ZodNumber>;
+    }, "strip", z.ZodTypeAny, {
+        query: string;
+        level?: number | undefined;
+    }, {
+        query: string;
+        level?: number | undefined;
+    }>, {
+        query: string;
+        level?: number | undefined;
+    }, {
+        query: string;
+        level?: number | undefined;
+    }, {
+        success: boolean;
+        message: string;
+        concepts: {
+            focus: any;
+            type: any;
+            key_words: any;
+            pageContent: any;
+        }[];
+    }, unknown, "searchConcepts">;
     getTools(): (import("langchain").DynamicTool<{
         success: boolean;
         message: string;
@@ -184,6 +209,30 @@ export declare class Tools {
         message: string;
         newBlock: number;
         reason: string;
-    }, unknown, "updateUserBlock">)[];
+    }, unknown, "updateUserBlock"> | import("langchain").DynamicStructuredTool<z.ZodObject<{
+        query: z.ZodString;
+        level: z.ZodOptional<z.ZodNumber>;
+    }, "strip", z.ZodTypeAny, {
+        query: string;
+        level?: number | undefined;
+    }, {
+        query: string;
+        level?: number | undefined;
+    }>, {
+        query: string;
+        level?: number | undefined;
+    }, {
+        query: string;
+        level?: number | undefined;
+    }, {
+        success: boolean;
+        message: string;
+        concepts: {
+            focus: any;
+            type: any;
+            key_words: any;
+            pageContent: any;
+        }[];
+    }, unknown, "searchConcepts">)[];
 }
 //# sourceMappingURL=tools.d.ts.map

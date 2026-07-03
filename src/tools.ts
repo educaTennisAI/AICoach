@@ -197,9 +197,64 @@ export class Tools {
     );
   }
 
+  searchConcepts() {
+    return tool(
+      async (input: { query: string; level?: number }) => {
+        const filter: any = { "$and": [{ "type": "concept" }] };
+        if (input.level) {
+          filter.$and.push({ "level": input.level });
+        }
+
+        try {
+          const docs = await vectorStore.similaritySearch(
+            input.query,
+            5,
+            filter as any
+          );
+
+          const concepts = docs.map((doc: any) => ({
+            focus: doc.metadata.focus,
+            type: doc.metadata.type,
+            key_words: doc.metadata.key_words,
+            pageContent: doc.pageContent,
+          }));
+
+          if (concepts.length === 0) {
+            return {
+              success: true,
+              message: "No relevant concepts found for your query.",
+              concepts: []
+            };
+          }
+
+          return {
+            success: true,
+            message: `Found ${concepts.length} relevant concepts`,
+            concepts,
+          };
+        } catch (error) {
+          return {
+            success: false,
+            message: `Error searching concepts: ${error}`,
+            concepts: []
+          };
+        }
+      },
+      {
+        name: "searchConcepts",
+        description: "Search for technical and tactical tennis concepts in the knowledge base. Use this tool when the user asks about technique, tactics, footwork, positioning, game patterns, or any tennis-specific concept.",
+        schema: z.object({
+          query: z.string().describe("The user's question or topic to search relevant concepts for"),
+          level: z.number().optional().describe("Player level (1-4) to filter concepts by level"),
+        }),
+      }
+    );
+  }
+
   getTools() {
     return [
       this.searchExercises(), 
+      this.searchConcepts(),
       this.getLevelGuidelines(), 
       this.getUserProfile(), 
       this.updateUserBlock()
