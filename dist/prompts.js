@@ -18,6 +18,7 @@ When using searchConcepts, you MUST:
 1. Translate the user's question to English in your mind
 2. Extract only the key tennis concept (2-5 words)
 3. Pass that concise English phrase as the query parameter
+4. Include any video references found in the concept's Media field in your response
 Do NOT pass the full user question or your own elaboration as the query.
 
 `;

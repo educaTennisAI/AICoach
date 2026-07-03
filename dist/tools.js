@@ -170,14 +170,13 @@ export class Tools {
             }
             try {
                 const docs = await vectorStore.similaritySearch(input.query, 5, filter);
-                console.log(docs);
                 const concepts = docs.map((doc) => ({
                     focus: doc.metadata.focus,
                     type: doc.metadata.type,
                     key_words: doc.metadata.key_words,
                     pageContent: doc.pageContent,
                 }));
-                console.log(docs);
+                console.log(concepts);
                 if (concepts.length === 0) {
                     return {
                         success: true,
