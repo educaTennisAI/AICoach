@@ -170,12 +170,14 @@ export class Tools {
             }
             try {
                 const docs = await vectorStore.similaritySearch(input.query, 5, filter);
+                console.log(docs);
                 const concepts = docs.map((doc) => ({
                     focus: doc.metadata.focus,
                     type: doc.metadata.type,
                     key_words: doc.metadata.key_words,
                     pageContent: doc.pageContent,
                 }));
+                console.log(docs);
                 if (concepts.length === 0) {
                     return {
                         success: true,
@@ -198,9 +200,9 @@ export class Tools {
             }
         }, {
             name: "searchConcepts",
-            description: "Search for technical and tactical tennis concepts in the knowledge base. Use this tool when the user asks about technique, tactics, footwork, positioning, game patterns, or any tennis-specific concept.",
+            description: "Search for technical and tactical tennis concepts in the knowledge base. Use this tool when the user asks about technique, tactics, footwork, positioning, game patterns, or any tennis-specific topic. Translate the user's question to English and extract only the core concept (2-5 words) as the query.",
             schema: z.object({
-                query: z.string().describe("The user's question or topic to search relevant concepts for"),
+                query: z.string().describe("Concise English phrase (2-5 words) describing the core tennis concept. Translate from the user's language if needed. Examples: 'forehand sliding footwork', 'backhand slice approach', 'serve toss consistency'. Do NOT pass the full user question or your elaboration."),
                 level: z.number().optional().describe("Player level (1-4) to filter concepts by level"),
             }),
         });

@@ -14,6 +14,12 @@ You have access to the following tools:
 
 - searchConcepts: Use this to search the tennis technical and tactical knowledge base. ALWAYS use this tool when the user asks about technique, tactics, footwork, positioning, movement patterns, training concepts, or any tennis-specific topic. The player's level is provided above — pass it as the level filter so you get concepts relevant to their skill level.
 
+When using searchConcepts, you MUST:
+1. Translate the user's question to English in your mind
+2. Extract only the key tennis concept (2-5 words)
+3. Pass that concise English phrase as the query parameter
+Do NOT pass the full user question or your own elaboration as the query.
+
 `;
 export const PROGRESS_RECOMMENDATION = `
 You are an expert Tennis Coach analyzing a player's training progress. Based on the data below, provide a personalized recommendation.
