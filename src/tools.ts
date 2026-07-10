@@ -60,10 +60,11 @@ export class Tools {
               ]
             }
           );
+          const doc = docs[0] as any;
           return {
             success: true,
             message: "Found level Guidelines",
-            guidelines: docs[0].pageContent
+            guidelines: doc.pageContent,
           };
         } catch(err) {
             return {
@@ -85,11 +86,12 @@ export class Tools {
 
   searchExercises() {
     return tool(
-      async (input: { level?: number; topics?: string[]; part?: string; minExercisesPerPart?: number; filter: Object } | undefined) => {
+      async (input: { level?: number; topics?: string[]; part?: string; minExercisesPerPart?: number; filter: Object; excludeIds?: string[] } | undefined) => {
         const level = input?.level || 4;
         const topics = input?.topics || [];
         const part = input?.part || "initial";
         const minExercisesPerPart = input?.minExercisesPerPart || 10;
+        const excludeIds = input?.excludeIds || [];
         const filter = input?.filter || {
           "$and": [
             { "level": level },
@@ -100,7 +102,7 @@ export class Tools {
         try {
           const docs = await vectorStore.similaritySearch(
             topics.join(" "),
-            minExercisesPerPart,
+            minExercisesPerPart + excludeIds.length,
             filter as any
           );
 
@@ -109,8 +111,11 @@ export class Tools {
             metadata: doc.metadata as any 
           }));
 
+          const filtered = excludeIds.length > 0
+            ? exercises.filter(e => !excludeIds.includes(e.metadata?.id))
+            : exercises;
 
-          if (exercises.length === 0) {
+          if (filtered.length === 0) {
             return {
               success: false,
               message: "No exercises found for the given criteria",
@@ -120,8 +125,9 @@ export class Tools {
 
           return {
             success: true,
-            message: `Found ${exercises.length} exercises`,
-            exercises: exercises.map(e => ({
+            message: `Found ${filtered.length} exercises`,
+            exercises: filtered.map(e => ({
+              id: e.metadata?.id,
               part: e.metadata.part,
               description: e.pageContent,
             }))
@@ -142,7 +148,8 @@ export class Tools {
           topics: z.array(z.string()).describe("Different topics or words to use for similarity search in chroma to retrieve custom content").optional(),
           part: z.enum(["initial", "main", "final"]).describe("Used to filter exercises by part of the training session"),
           minExercisePerPart: z.number().describe("Number of exercises to retrieve").optional(),
-          filter: z.object({}).describe("Chroma db query filter").optional()
+          filter: z.object({}).describe("Chroma db query filter").optional(),
+          excludeIds: z.array(z.string()).describe("Exercise IDs to exclude from results (already used in prior days). Do NOT include mandatory exercise IDs here.").optional()
         }),
       }
     );
@@ -197,6 +204,81 @@ export class Tools {
     );
   }
 
+  validatePlan() {
+    return tool(
+      async (input: { planJson: string; mandatoryVideoUrls: string[] }) => {
+        try {
+          const plan = JSON.parse(input.planJson);
+          if (!Array.isArray(plan)) {
+            return { success: false, message: "Plan is not an array", violations: [] };
+          }
+
+          const mandatory = new Set(input.mandatoryVideoUrls || []);
+          const videoMap = new Map<string, string[]>();
+          for (const session of plan) {
+            const day = session.day;
+            for (const ex of session.exercises || []) {
+              const video = ex.video;
+              if (!video) continue;
+              if (mandatory.has(video)) continue;
+              if (!videoMap.has(video)) videoMap.set(video, []);
+              videoMap.get(video)!.push(day);
+            }
+          }
+
+          const violations: string[] = [];
+
+          for (const [video, days] of videoMap) {
+            if (days.length > 1) {
+              violations.push(`Duplicate exercise: "${video}" appears on ${days.join(", ")}. Replace it on all but one day.`);
+            }
+          }
+
+          // Order check: live ball exercises must always appear before coach/basket/feed exercises in the main part
+          for (const session of plan) {
+            const mainEx = (session.exercises || []).filter((e: any) =>
+              e.part?.toLowerCase() === "main"
+            );
+            let seenCoach = false;
+            for (const ex of mainEx) {
+              const method = (ex.method || "").toLowerCase();
+              const isCoach = method.includes("coach") || method.includes("basket") || method.includes("feed");
+              const isLive = method.includes("live") || method.includes("player");
+              if (isCoach) seenCoach = true;
+              if (seenCoach && isLive) {
+                violations.push(`${session.day}: "${ex.name}" is live ball but appears after coach work. Move all live ball exercises before coach/basket/feed exercises.`);
+              }
+            }
+          }
+
+          if (violations.length === 0) {
+            return { success: true, message: "No issues found.", violations: [] };
+          }
+
+          return {
+            success: false,
+            message: `Found ${violations.length} issue(s). Fix them and re-validate.`,
+            violations
+          };
+        } catch (e) {
+          return {
+            success: false,
+            message: `Could not parse plan JSON: ${e}`,
+            violations: []
+          };
+        }
+      },
+      {
+        name: "validatePlan",
+        description: "After generating the weekly plan, call this tool to check for duplicate exercises (same video URL) across different days and to verify that all live ball exercises appear before coach/basket/feed exercises in the main part. Pass the mandatory video URLs so they are excluded from the duplicate check. Fix any violations and re-validate.",
+        schema: z.object({
+          planJson: z.string().describe("The complete weekly plan as a JSON array string"),
+          mandatoryVideoUrls: z.array(z.string()).describe("Video URLs of mandatory exercises that are allowed to repeat across all days"),
+        }),
+      }
+    );
+  }
+
   searchConcepts() {
     return tool(
       async (input: { query: string; level?: number }) => {
@@ -219,7 +301,6 @@ export class Tools {
             pageContent: doc.pageContent,
           }));
 
-          console.log(concepts);
           if (concepts.length === 0) {
             return {
               success: true,
@@ -258,7 +339,8 @@ export class Tools {
       this.searchConcepts(),
       this.getLevelGuidelines(), 
       this.getUserProfile(), 
-      this.updateUserBlock()
+      this.updateUserBlock(),
+      this.validatePlan()
     ];
   }
 }

@@ -29,9 +29,9 @@ class AICoach {
   private agent: ReturnType<typeof createAgent>;
   private supabase: any;
 
-  constructor(config: AgentConfig = { model: "gpt-5.4-nano", checkpointer: new MemorySaver }, supabaseClient?: any) {
+  constructor(config: AgentConfig = { model: "gpt-5.6-luna", checkpointer: new MemorySaver }, supabaseClient?: any) {
     // Default config
-    config.model ??= "gpt-5.4-nano"; 
+    config.model ??= "gpt-5.6-luna"; 
     config.checkpointer ??= new MemorySaver(); 
     config.tools ??= new Tools(supabaseClient).getTools();
 
@@ -53,7 +53,8 @@ class AICoach {
         weeksBeforeComp = String(Math.max(1, weeks));
       }
       
-      const prompt = WEEKLY_PLANER
+      const recentExercises = await this.getRecentExercises(sessionId);
+      let prompt = WEEKLY_PLANER
         .replace("{_prompt}", _prompt)
         .replace("{week}", week) 
         .replace("{training_days}", trainingDays)
@@ -61,6 +62,7 @@ class AICoach {
         .replace("{level}", String(userProfile.level) || 'beginner')
         .replace("{block}", String(userProfile.currentBlock) || '1')
         .replace("{week_before_comp}", weeksBeforeComp)
+        .replace("{previous_weeks}", recentExercises)
 
       const result = await this.agent.invoke(
         { 
@@ -84,12 +86,14 @@ class AICoach {
 
   async createTrainingSession(sessionId: string, userProfile: any, day: string, _prompt: string) {
     try { 
+      const recentExercises = await this.getRecentExercises(sessionId);
       const prompt = SESSION_PLANER
         .replace("{_prompt}", _prompt)
         .replace("{day}", day) 
         .replace("{language}", userProfile.language || 'en')
         .replace("{level}", String(userProfile.level) || 'beginner')
         .replace("{block}", String(userProfile.currentBlock) || '1')
+        .replace("{previous_weeks}", recentExercises)
 
       const result = await this.agent.invoke(
         { 
@@ -221,6 +225,24 @@ class AICoach {
       console.error('Error evaluating block advancement:', err);
       return { advance: false, reason: 'Error during evaluation' };
     }
+  }
+
+  private async getRecentExercises(userId: string): Promise<string> {
+    if (!this.supabase) return "No previous session data available.";
+
+    const { data } = await this.supabase
+      .from("progress")
+      .select("sessions")
+      .eq("user_id", userId)
+      .eq("area", "session_feedback");
+
+    const allSessions = data?.[0]?.sessions || [];
+    if (allSessions.length === 0) return "No previous sessions found.";
+
+    const recent = allSessions.slice(-6);
+    return recent.map((s: any) =>
+      `[${s.sessionDay}] ${s.exercisesCompleted?.map((e: any) => e.name).join(", ") || "No exercises recorded"}`
+    ).join("\n");
   }
 
   async chatStream(input: { sessionId?: string; messages: { role: string; content: string }[] }) {
