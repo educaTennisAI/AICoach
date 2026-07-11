@@ -29,9 +29,9 @@ class AICoach {
   private agent: ReturnType<typeof createAgent>;
   private supabase: any;
 
-  constructor(config: AgentConfig = { model: "gpt-5.6-luna", checkpointer: new MemorySaver }, supabaseClient?: any) {
+  constructor(config: AgentConfig = { model: "gpt-5.6-terra", checkpointer: new MemorySaver }, supabaseClient?: any) {
     // Default config
-    config.model ??= "gpt-5.6-luna"; 
+    config.model ??= "gpt-5.6-terra"; 
     config.checkpointer ??= new MemorySaver(); 
     config.tools ??= new Tools(supabaseClient).getTools();
 

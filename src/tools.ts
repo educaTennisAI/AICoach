@@ -129,7 +129,7 @@ export class Tools {
             exercises: filtered.map(e => ({
               id: e.metadata?.id,
               part: e.metadata.part,
-              description: e.pageContent,
+              description: e.metadata?.description || e.pageContent,
             }))
           };
         } catch (error) {
